@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f97316">
+<link rel="manifest" href="manifest.json">
+<title>LotTrack — Lot & Sample Tracking</title>
+<style>
+:root{--bg:#0b0b0c;--panel:#151516;--panel2:#1d1d1f;--orange:#f97316;--orange2:#fb923c;--text:#f8fafc;--muted:#a1a1aa;--line:#303034;--green:#22c55e;--red:#ef4444}
+*{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,#090909,#111);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{position:sticky;top:0;z-index:5;background:rgba(10,10,10,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:18px 16px}
+.brand{display:flex;align-items:center;gap:12px;max-width:1100px;margin:auto}.logo{width:42px;height:42px;border-radius:12px;background:var(--orange);display:grid;place-items:center;color:#111;font-weight:900}
+h1{font-size:20px;margin:0}.sub{font-size:12px;color:var(--muted)}
+main{max-width:1100px;margin:auto;padding:18px 14px 95px}.tabs{display:flex;gap:8px;margin-bottom:16px}.tab{flex:1;border:1px solid var(--line);background:var(--panel);color:#fff;border-radius:12px;padding:12px;font-weight:700}.tab.active{background:var(--orange);color:#111;border-color:var(--orange)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 12px 30px rgba(0,0,0,.18)}
+.row{display:grid;grid-template-columns:repeat(12,1fr);gap:10px}.field{grid-column:span 4}.field.wide{grid-column:span 12}.field.half{grid-column:span 6}
+label{display:block;color:var(--muted);font-size:12px;margin:0 0 6px}input,select,textarea{width:100%;border:1px solid var(--line);background:#0f0f10;color:#fff;border-radius:10px;padding:11px;font-size:15px}textarea{min-height:95px;resize:vertical}
+button{cursor:pointer}.primary,.secondary,.danger{border:0;border-radius:11px;padding:11px 14px;font-weight:800}.primary{background:var(--orange);color:#111}.secondary{background:#29292c;color:#fff}.danger{background:#3b1616;color:#fecaca}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.toolbar h2{margin:0;font-size:18px}.checks{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.check{background:#101011;border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;gap:8px;align-items:center}.check input{width:auto}
+.lot-head{display:flex;justify-content:space-between;gap:10px;align-items:start}.lot-title{font-weight:850;font-size:17px}.pill{display:inline-block;padding:5px 8px;border-radius:999px;background:#27272a;color:#ddd;font-size:11px;margin:3px 4px 0 0}.pass{background:#12331d;color:#86efac}.fail{background:#3c1515;color:#fca5a5}
+.month{font-size:13px;color:var(--orange2);font-weight:800;margin-bottom:7px}.empty{text-align:center;color:var(--muted);padding:35px 10px}
+.item-photo{width:100%;max-height:240px;object-fit:contain;background:#0c0c0d;border:1px dashed #444;border-radius:12px;margin-top:8px}.hidden{display:none!important}
+.small{font-size:12px;color:var(--muted)} .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+@media(max-width:700px){.field,.field.half{grid-column:span 12}.checks{grid-template-columns:1fr}.lot-head{flex-direction:column}.tabs{position:sticky;top:79px;z-index:4}}
+</style>
+</head>
+<body>
+<header><div class="brand"><div class="logo">LT</div><div><h1>LotTrack</h1><div class="sub">Lot & test sample tracking</div></div></div></header>
+<main>
+<div class="tabs"><button class="tab active" data-tab="lots">Lots</button><button class="tab" data-tab="items">Items</button></div>
+
+<section id="lots">
+<div class="card">
+<div class="toolbar"><h2>Add Lot</h2><button class="secondary" id="exportBtn">Export Backup</button></div>
+<div class="row">
+<div class="field"><label>Month</label><input id="lotMonth" type="month"></div>
+<div class="field"><label>Lot No.</label><input id="lotNo" placeholder="e.g. L-1024"></div>
+<div class="field"><label>Lot Qty</label><input id="lotQty" type="number" min="0" placeholder="0"></div>
+<div class="field wide"><label>Tracking Number for Samples</label><input id="tracking" placeholder="Carrier / tracking number"></div>
+</div>
+<div class="card" style="margin-top:12px;background:#101011">
+<div class="small" style="margin-bottom:10px">Test Center Status — update each center independently as information is received.</div>
+<div class="row">
+<div class="field"><label>KSU — Shipped</label><input id="ksu" type="checkbox"></div>
+<div class="field"><label>KSU — Delivered</label><input id="ksuDelivered" type="checkbox"></div>
+<div class="field"><label>KSU — Result</label><select id="ksuResult"><option value="">Pending</option><option>PASS</option><option>FAIL</option><option>NA</option></select></div>
+<div class="field"><label>GORE — Shipped</label><input id="gore" type="checkbox"></div>
+<div class="field"><label>GORE — Delivered</label><input id="goreDelivered" type="checkbox"></div>
+<div class="field"><label>GORE — Result</label><select id="goreResult"><option value="">Pending</option><option>PASS</option><option>FAIL</option><option>NA</option></select></div>
+<div class="field"><label>Vartest — Shipped</label><input id="vartest" type="checkbox"></div>
+<div class="field"><label>Vartest — Delivered</label><input id="vartestDelivered" type="checkbox"></div>
+<div class="field"><label>Vartest — Result</label><select id="vartestResult"><option value="">Pending</option><option>PASS</option><option>FAIL</option><option>NA</option></select></div>
+</div></div>
+<div class="actions"><button class="primary" id="addLot">Save Lot</button></div>
+</div>
+<div class="toolbar"><h2>Lots by Month</h2><input id="filterMonth" type="month" style="max-width:190px"></div>
+<div id="lotList"></div>
+</section>
+
+<section id="items" class="hidden">
+<div class="card">
+<div class="toolbar"><h2>Item Information</h2><button class="primary" id="newItem">+ New Item</button></div>
+<label>Select Item</label><select id="itemSelect"><option value="">Select an item…</option></select>
+</div>
+<div class="card" id="itemEditor">
+<div class="row">
+<div class="field half"><label>Item Name / No.</label><input id="itemName" placeholder="Enter item"></div>
+<div class="field half"><label>Picture of Item</label><input id="itemPicture" type="file" accept="image/*"></div>
+<div class="field wide"><img id="preview" class="item-photo hidden" alt="Item preview"></div>
+<div class="field wide"><label>Measurement Form</label><textarea id="measurement" placeholder="Measurements, form details, or reference information"></textarea></div>
+<div class="field wide"><label>PD Pages</label><textarea id="pdPages" placeholder="PD page numbers / details"></textarea></div>
+<div class="field wide"><label>Notes</label><textarea id="notes" placeholder="Item notes"></textarea></div>
+<div class="field half"><label>Test Center for Item Samples</label><select id="testCenter"><option value="">Select…</option><option>KSU</option><option>GORE</option><option>Vartest</option><option>Other</option></select></div>
+<div class="field half"><label>How Samples Should Be Sent to Test Center</label><textarea id="sendMethod" placeholder="Packaging, quantity, carrier, special instructions"></textarea></div>
+</div>
+<div class="actions"><button class="primary" id="saveItem">Save Item</button><button class="danger" id="deleteItem">Delete Item</button></div>
+<p class="small">Information is saved on this device automatically after you press Save Item.</p>
+</div>
+</section>
+</main>
+<script>
+const KEY='lottrack-v1';
+let db=JSON.parse(localStorage.getItem(KEY)||'{"lots":[],"items":[]}');
+const $=id=>document.getElementById(id);
+const save=()=>localStorage.setItem(KEY,JSON.stringify(db));
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('lots').classList.toggle('hidden',b.dataset.tab!=='lots');$('items').classList.toggle('hidden',b.dataset.tab!=='items')});
+$('lotMonth').value=new Date().toISOString().slice(0,7);
+$('filterMonth').value='';
+let editingLot='';
+function lotFormData(id){return {id:id||crypto.randomUUID(),month:$('lotMonth').value,no:$('lotNo').value.trim(),qty:$('lotQty').value,tracking:$('tracking').value.trim(),ksu:$('ksu').checked,ksuDelivered:$('ksuDelivered').checked,ksuResult:$('ksuResult').value,gore:$('gore').checked,goreDelivered:$('goreDelivered').checked,goreResult:$('goreResult').value,vartest:$('vartest').checked,vartestDelivered:$('vartestDelivered').checked,vartestResult:$('vartestResult').value}}
+function clearLot(){editingLot='';$('addLot').textContent='Save Lot';['lotNo','lotQty','tracking'].forEach(x=>$(x).value='');['ksu','ksuDelivered','gore','goreDelivered','vartest','vartestDelivered'].forEach(x=>$(x).checked=false);['ksuResult','goreResult','vartestResult'].forEach(x=>$(x).value='')}
+$('addLot').onclick=()=>{if(!$('lotNo').value.trim())return alert('Enter a Lot No.');let data=lotFormData(editingLot);if(editingLot){let old=db.lots.find(x=>x.id===editingLot);Object.assign(old,data)}else db.lots.push(data);save();clearLot();renderLots()};
+$('filterMonth').onchange=renderLots;
+function resultPill(center,result){let cls=result==='PASS'?'pass':result==='FAIL'?'fail':'';return `<span class="pill ${cls}">${center}: ${esc(result||'Pending')}</span>`}
+function renderLots(){let lots=[...db.lots].sort((a,b)=>(b.month||'').localeCompare(a.month||''));if($('filterMonth').value)lots=lots.filter(x=>x.month===$('filterMonth').value);$('lotList').innerHTML=lots.length?lots.map(l=>`<div class="card"><div class="month">${esc(l.month||'No month')}</div><div class="lot-head"><div><div class="lot-title">Lot ${esc(l.no)}</div><div class="small">Qty: ${esc(l.qty||'—')} • Tracking: ${esc(l.tracking||'—')}</div><div>${resultPill('KSU',l.ksuResult)}${resultPill('GORE',l.goreResult)}${resultPill('Vartest',l.vartestResult)}</div><div class="small" style="margin-top:8px">KSU: ${l.ksu?'Shipped':'Not shipped'} / ${l.ksuDelivered?'Delivered':'Not delivered'} &nbsp; • &nbsp; GORE: ${l.gore?'Shipped':'Not shipped'} / ${l.goreDelivered?'Delivered':'Not delivered'} &nbsp; • &nbsp; Vartest: ${l.vartest?'Shipped':'Not shipped'} / ${l.vartestDelivered?'Delivered':'Not delivered'}</div></div><div class="actions"><button class="secondary" onclick="editLot('${l.id}')">Edit / Update</button><button class="danger" onclick="deleteLot('${l.id}')">Delete</button></div></div></div>`).join(''):'<div class="card empty">No lots entered yet.</div>'}
+window.editLot=id=>{let l=db.lots.find(x=>x.id===id);if(!l)return;editingLot=id;$('lotMonth').value=l.month||'';$('lotNo').value=l.no||'';$('lotQty').value=l.qty||'';$('tracking').value=l.tracking||'';['ksu','ksuDelivered','gore','goreDelivered','vartest','vartestDelivered'].forEach(x=>$(x).checked=!!l[x]);['ksuResult','goreResult','vartestResult'].forEach(x=>$(x).value=l[x]||'');$('addLot').textContent='Update Lot';window.scrollTo({top:0,behavior:'smooth'})};
+window.deleteLot=id=>{if(confirm('Delete this lot?')){db.lots=db.lots.filter(x=>x.id!==id);save();if(editingLot===id)clearLot();renderLots()}};
+let currentItem='';
+function renderItemSelect(){let v=$('itemSelect').value;$('itemSelect').innerHTML='<option value="">Select an item…</option>'+db.items.map(i=>`<option value="${i.id}">${esc(i.name)}</option>`).join('');if(db.items.some(i=>i.id===v))$('itemSelect').value=v}
+function clearItem(){currentItem='';$('itemSelect').value='';['itemName','measurement','pdPages','notes','sendMethod'].forEach(x=>$(x).value='');$('testCenter').value='';$('itemPicture').value='';$('preview').src='';$('preview').classList.add('hidden')}
+$('newItem').onclick=clearItem;
+$('itemSelect').onchange=()=>{let i=db.items.find(x=>x.id===$('itemSelect').value);if(!i)return clearItem();currentItem=i.id;$('itemName').value=i.name||'';$('measurement').value=i.measurement||'';$('pdPages').value=i.pdPages||'';$('notes').value=i.notes||'';$('testCenter').value=i.testCenter||'';$('sendMethod').value=i.sendMethod||'';if(i.picture){$('preview').src=i.picture;$('preview').classList.remove('hidden')}else $('preview').classList.add('hidden')};
+$('itemPicture').onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{$('preview').src=r.result;$('preview').classList.remove('hidden')};r.readAsDataURL(f)};
+$('saveItem').onclick=()=>{let name=$('itemName').value.trim();if(!name)return alert('Enter an item name or number.');let old=db.items.find(x=>x.id===currentItem);let item={id:currentItem||crypto.randomUUID(),name,measurement:$('measurement').value,pdPages:$('pdPages').value,notes:$('notes').value,testCenter:$('testCenter').value,sendMethod:$('sendMethod').value,picture:$('preview').src||''};if(old)Object.assign(old,item);else db.items.push(item);currentItem=item.id;save();renderItemSelect();$('itemSelect').value=item.id;alert('Item saved.')};
+$('deleteItem').onclick=()=>{if(!currentItem)return;if(confirm('Delete this item?')){db.items=db.items.filter(x=>x.id!==currentItem);save();renderItemSelect();clearItem()}};
+$('exportBtn').onclick=()=>{let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='lottrack-backup.json';a.click();URL.revokeObjectURL(a.href)};
+renderLots();renderItemSelect();
+if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
+</script>
+</body></html>

@@ -1,0 +1,9 @@
+{
+  "name": "LotTrack — Lot & Sample Tracking",
+  "short_name": "LotTrack",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0b0b0c",
+  "theme_color": "#f97316",
+  "icons": []
+}

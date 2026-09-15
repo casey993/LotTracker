@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f97316">
+<link rel="manifest" href="manifest.json">
+<title>LotTrack — Lot & Sample Tracking</title>
+<style>
+:root{--bg:#0b0b0c;--panel:#151516;--panel2:#1d1d1f;--orange:#f97316;--orange2:#fb923c;--text:#f8fafc;--muted:#a1a1aa;--line:#303034;--green:#22c55e;--red:#ef4444}
+*{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,#090909,#111);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{position:sticky;top:0;z-index:5;background:rgba(10,10,10,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:18px 16px}
+.brand{display:flex;align-items:center;gap:12px;max-width:1100px;margin:auto}.logo{width:42px;height:42px;border-radius:12px;background:var(--orange);display:grid;place-items:center;color:#111;font-weight:900}
+h1{font-size:20px;margin:0}.sub{font-size:12px;color:var(--muted)}
+main{max-width:1100px;margin:auto;padding:18px 14px 95px}.tabs{display:flex;gap:8px;margin-bottom:16px}.tab{flex:1;border:1px solid var(--line);background:var(--panel);color:#fff;border-radius:12px;padding:12px;font-weight:700}.tab.active{background:var(--orange);color:#111;border-color:var(--orange)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 12px 30px rgba(0,0,0,.18)}
+.row{display:grid;grid-template-columns:repeat(12,1fr);gap:10px}.field{grid-column:span 4}.field.wide{grid-column:span 12}.field.half{grid-column:span 6}
+label{display:block;color:var(--muted);font-size:12px;margin:0 0 6px}input,select,textarea{width:100%;border:1px solid var(--line);background:#0f0f10;color:#fff;border-radius:10px;padding:11px;font-size:15px}textarea{min-height:95px;resize:vertical}
+button{cursor:pointer}.primary,.secondary,.danger{border:0;border-radius:11px;padding:11px 14px;font-weight:800}.primary{background:var(--orange);color:#111}.secondary{background:#29292c;color:#fff}.danger{background:#3b1616;color:#fecaca}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.toolbar h2{margin:0;font-size:18px}.checks{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.check{background:#101011;border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;gap:8px;align-items:center}.check input{width:auto}
+.lot-head{display:flex;justify-content:space-between;gap:10px;align-items:start}.lot-title{font-weight:850;font-size:17px}.pill{display:inline-block;padding:5px 8px;border-radius:999px;background:#27272a;color:#ddd;font-size:11px;margin:3px 4px 0 0}.pass{background:#12331d;color:#86efac}.fail{background:#3c1515;color:#fca5a5}
+.month{font-size:13px;color:var(--orange2);font-weight:800;margin-bottom:7px}.empty{text-align:center;color:var(--muted);padding:35px 10px}
+.item-photo{width:100%;max-height:240px;object-fit:contain;background:#0c0c0d;border:1px dashed #444;border-radius:12px;margin-top:8px}.hidden{display:none!important}
+.small{font-size:12px;color:var(--muted)} .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.docbox{background:#101011;border:1px solid var(--line);border-radius:12px;padding:12px}
+.doclinks{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.doclinks a{display:inline-block;text-decoration:none;background:#29292c;color:#fff;border-radius:9px;padding:8px 10px;font-size:13px;font-weight:700}
+.qty-status{margin-top:7px}
+@media(max-width:700px){.field,.field.half{grid-column:span 12}.checks{grid-template-columns:1fr}.lot-head{flex-direction:column}.tabs{position:sticky;top:79px;z-index:4}}
+</style>
+</head>
+<body>
+<header><div class="brand"><div class="logo">LT</div><div><h1>LotTrack</h1><div class="sub">Lot & test sample tracking</div></div></div></header>
+<main>
+<div class="tabs"><button class="tab active" data-tab="lots">Lots</button><button class="tab" data-tab="items">Items</button></div>
+
+<section id="lots">
+<div class="card">
+<div class="toolbar"><h2>Add Lot</h2><button class="secondary" id="exportBtn">Export Backup</button></div>
+<div class="row">
+<div class="field"><label>Month</label><input id="lotMonth" type="month"></div>
+<div class="field"><label>Lot No.</label><input id="lotNo" placeholder="e.g. L-1024"></div>
+<div class="field"><label>Expected Lot Qty</label><input id="lotQty" type="number" min="0" placeholder="0"></div>
+<div class="field"><label>Received Qty</label><input id="receivedQty" type="number" min="0" placeholder="0"></div>
+<div class="field"><label>Remaining Qty</label><input id="remainingQty" type="number" min="0" placeholder="Calculated" readonly></div>
+</div>
+<div class="card" style="margin-top:12px;background:#101011">
+<div class="small" style="margin-bottom:10px">Test Center Status — update each center independently as information is received.</div>
+<div class="row">
+<div class="field"><label>KSU — Shipped</label><input id="ksu" type="checkbox"></div>
+<div class="field"><label>KSU — Tracking No.</label><input id="ksuTracking" placeholder="Carrier / tracking number"></div>
+<div class="field"><label>KSU — Delivered</label><input id="ksuDelivered" type="checkbox"></div>
+<div class="field"><label>KSU — Result</label><select id="ksuResult"><option value="">Pending</option><option>PASS</option><option>FAIL</option><option>NA</option></select></div>
+<div class="field"><label>GORE — Shipped</label><input id="gore" type="checkbox"></div>
+<div class="field"><label>GORE — Tracking No.</label><input id="goreTracking" placeholder="Carrier / tracking number"></div>
+<div class="field"><label>GORE — Delivered</label><input id="goreDelivered" type="checkbox"></div>
+<div class="field"><label>GORE — Result</label><select id="goreResult"><option value="">Pending</option><option>PASS</option><option>FAIL</option><option>NA</option></select></div>
+<div class="field"><label>Vartest — Shipped</label><input id="vartest" type="checkbox"></div>
+<div class="field"><label>Vartest — Tracking No.</label><input id="vartestTracking" placeholder="Carrier / tracking number"></div>
+<div class="field"><label>Vartest — Delivered</label><input id="vartestDelivered" type="checkbox"></div>
+<div class="field"><label>Vartest — Result</label><select id="vartestResult"><option value="">Pending</option><option>PASS</option><option>FAIL</option><option>NA</option></select></div>
+</div></div>
+<div class="actions"><button class="primary" id="addLot">Save Lot</button></div>
+</div>
+<div class="toolbar"><h2>Lots by Month</h2><input id="filterMonth" type="month" style="max-width:190px"></div>
+<div id="lotList"></div>
+</section>
+
+<section id="items" class="hidden">
+<div class="card">
+<div class="toolbar"><h2>Item Information</h2><button class="primary" id="newItem">+ New Item</button></div>
+<label>Select Item</label><select id="itemSelect"><option value="">Select an item…</option></select>
+</div>
+<div class="card" id="itemEditor">
+<div class="row">
+<div class="field half"><label>Item Name / No.</label><input id="itemName" placeholder="Enter item"></div>
+<div class="field half"><label>Picture of Item</label><input id="itemPicture" type="file" accept="image/*"></div>
+<div class="field wide"><img id="preview" class="item-photo hidden" alt="Item preview"></div>
+<div class="field wide docbox">
+<label>Measurement Form</label>
+<input id="measurementFile" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.heic,.txt">
+<label style="margin-top:10px">or Measurement Link</label>
+<input id="measurementLink" type="url" placeholder="https://...">
+<label style="margin-top:10px">Measurement Notes / Reference</label>
+<textarea id="measurement" placeholder="Optional notes, measurements, or reference information"></textarea>
+<div id="measurementSaved" class="doclinks"></div>
+</div>
+<div class="field wide docbox">
+<label>PD Information / Pages</label>
+<input id="pdFile" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.heic,.txt">
+<label style="margin-top:10px">or PD Link</label>
+<input id="pdLink" type="url" placeholder="https://...">
+<label style="margin-top:10px">PD Notes / Page Numbers</label>
+<textarea id="pdPages" placeholder="Optional PD page numbers / details"></textarea>
+<div id="pdSaved" class="doclinks"></div>
+</div>
+<div class="field wide"><label>Notes</label><textarea id="notes" placeholder="Item notes"></textarea></div>
+<div class="field half"><label>Test Center for Item Samples</label><select id="testCenter"><option value="">Select…</option><option>KSU</option><option>GORE</option><option>Vartest</option><option>Other</option></select></div>
+<div class="field half"><label>How Samples Should Be Sent to Test Center</label><textarea id="sendMethod" placeholder="Packaging, quantity, carrier, special instructions"></textarea></div>
+</div>
+<div class="actions"><button class="primary" id="saveItem">Save Item</button><button class="danger" id="deleteItem">Delete Item</button></div>
+<p class="small">Information is saved on this device automatically after you press Save Item.</p>
+</div>
+</section>
+</main>
+
+<script>
+const KEY='lottrack-v1';
+let db=JSON.parse(localStorage.getItem(KEY)||'{"lots":[],"items":[]}');
+const $=id=>document.getElementById(id);
+const save=()=>localStorage.setItem(KEY,JSON.stringify(db));
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const safeUrl=u=>{u=(u||'').trim();if(!u)return '';try{let x=new URL(u);return ['http:','https:'].includes(x.protocol)?x.href:''}catch{return ''}};
+const fileToData=f=>new Promise((resolve,reject)=>{let r=new FileReader();r.onload=()=>resolve({name:f.name,type:f.type||'',data:r.result});r.onerror=reject;r.readAsDataURL(f)});
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('lots').classList.toggle('hidden',b.dataset.tab!=='lots');$('items').classList.toggle('hidden',b.dataset.tab!=='items')});
+$('lotMonth').value=new Date().toISOString().slice(0,7);
+$('filterMonth').value='';
+let editingLot='';
+
+function calcRemaining(){
+  let expected=Number($('lotQty').value)||0, received=Number($('receivedQty').value)||0;
+  $('remainingQty').value=Math.max(expected-received,0);
+}
+$('lotQty').oninput=calcRemaining;
+$('receivedQty').oninput=calcRemaining;
+
+function lotFormData(id){return {
+ id:id||crypto.randomUUID(),month:$('lotMonth').value,no:$('lotNo').value.trim(),
+ qty:$('lotQty').value,receivedQty:$('receivedQty').value,
+ ksu:$('ksu').checked,ksuTracking:$('ksuTracking').value.trim(),ksuDelivered:$('ksuDelivered').checked,ksuResult:$('ksuResult').value,
+ gore:$('gore').checked,goreTracking:$('goreTracking').value.trim(),goreDelivered:$('goreDelivered').checked,goreResult:$('goreResult').value,
+ vartest:$('vartest').checked,vartestTracking:$('vartestTracking').value.trim(),vartestDelivered:$('vartestDelivered').checked,vartestResult:$('vartestResult').value
+}}
+function clearLot(){
+ editingLot='';$('addLot').textContent='Save Lot';
+ ['lotNo','lotQty','receivedQty','remainingQty','ksuTracking','goreTracking','vartestTracking'].forEach(x=>$(x).value='');
+ ['ksu','ksuDelivered','gore','goreDelivered','vartest','vartestDelivered'].forEach(x=>$(x).checked=false);
+ ['ksuResult','goreResult','vartestResult'].forEach(x=>$(x).value='')
+}
+$('addLot').onclick=()=>{
+ if(!$('lotNo').value.trim())return alert('Enter a Lot No.');
+ let data=lotFormData(editingLot);
+ if(editingLot){let old=db.lots.find(x=>x.id===editingLot);Object.assign(old,data)}else db.lots.push(data);
+ save();clearLot();renderLots()
+};
+$('filterMonth').onchange=renderLots;
+function resultPill(center,result){let cls=result==='PASS'?'pass':result==='FAIL'?'fail':'';return `<span class="pill ${cls}">${center}: ${esc(result||'Pending')}</span>`}
+function lotStatus(l){
+ let expected=Number(l.qty)||0, received=Number(l.receivedQty)||0;
+ if([l.ksuResult,l.goreResult,l.vartestResult].includes('FAIL'))return 'Failed';
+ let applicable=[l.ksuResult,l.goreResult,l.vartestResult].filter(x=>x!=='NA');
+ if(applicable.length && applicable.every(x=>x==='PASS'))return 'Passed';
+ if([l.ksu,l.gore,l.vartest].some(Boolean)||applicable.some(x=>x==='PASS'||x==='FAIL'))return 'Testing';
+ if(expected>0 && received>=expected)return 'Fully Received';
+ if(received>0)return 'Partial';
+ return 'Awaiting Receipt'
+}
+function renderLots(){
+ let lots=[...db.lots].sort((a,b)=>(b.month||'').localeCompare(a.month||''));
+ if($('filterMonth').value)lots=lots.filter(x=>x.month===$('filterMonth').value);
+ $('lotList').innerHTML=lots.length?lots.map(l=>{
+   let received=Number(l.receivedQty)||0, expected=Number(l.qty)||0, remaining=Math.max(expected-received,0);
+   return `<div class="card"><div class="month">${esc(l.month||'No month')}</div><div class="lot-head"><div>
+   <div class="lot-title">Lot ${esc(l.no)} <span class="pill">${esc(lotStatus(l))}</span></div>
+   <div class="small qty-status">Expected: ${esc(l.qty||'—')} • Received: ${esc(l.receivedQty||'0')} • Remaining: ${remaining}</div>
+   <div>${resultPill('KSU',l.ksuResult)}${resultPill('GORE',l.goreResult)}${resultPill('Vartest',l.vartestResult)}</div>
+   <div class="small" style="margin-top:8px">
+   KSU: ${l.ksu?'Shipped':'Not shipped'} / ${l.ksuDelivered?'Delivered':'Not delivered'} / Tracking: ${esc(l.ksuTracking||l.tracking||'—')}<br>
+   GORE: ${l.gore?'Shipped':'Not shipped'} / ${l.goreDelivered?'Delivered':'Not delivered'} / Tracking: ${esc(l.goreTracking||'—')}<br>
+   Vartest: ${l.vartest?'Shipped':'Not shipped'} / ${l.vartestDelivered?'Delivered':'Not delivered'} / Tracking: ${esc(l.vartestTracking||'—')}
+   </div></div><div class="actions"><button class="secondary" onclick="editLot('${l.id}')">Edit / Update</button><button class="danger" onclick="deleteLot('${l.id}')">Delete</button></div></div></div>`
+ }).join(''):'<div class="card empty">No lots entered yet.</div>'
+}
+window.editLot=id=>{
+ let l=db.lots.find(x=>x.id===id);if(!l)return;editingLot=id;
+ $('lotMonth').value=l.month||'';$('lotNo').value=l.no||'';$('lotQty').value=l.qty||'';$('receivedQty').value=l.receivedQty||'';
+ $('ksuTracking').value=l.ksuTracking||l.tracking||'';$('goreTracking').value=l.goreTracking||'';$('vartestTracking').value=l.vartestTracking||'';
+ ['ksu','ksuDelivered','gore','goreDelivered','vartest','vartestDelivered'].forEach(x=>$(x).checked=!!l[x]);
+ ['ksuResult','goreResult','vartestResult'].forEach(x=>$(x).value=l[x]||'');
+ calcRemaining();$('addLot').textContent='Update Lot';window.scrollTo({top:0,behavior:'smooth'})
+};
+window.deleteLot=id=>{if(confirm('Delete this lot?')){db.lots=db.lots.filter(x=>x.id!==id);save();if(editingLot===id)clearLot();renderLots()}};
+
+let currentItem='';
+function renderItemSelect(){let v=$('itemSelect').value;$('itemSelect').innerHTML='<option value="">Select an item…</option>'+db.items.map(i=>`<option value="${i.id}">${esc(i.name)}</option>`).join('');if(db.items.some(i=>i.id===v))$('itemSelect').value=v}
+function showDocs(i){
+ let ml=safeUrl(i?.measurementLink), pl=safeUrl(i?.pdLink);
+ $('measurementSaved').innerHTML=(i?.measurementFile?.data?`<a href="${i.measurementFile.data}" download="${esc(i.measurementFile.name||'measurement-file')}">Open Saved File: ${esc(i.measurementFile.name||'Measurement')}</a>`:'')+(ml?`<a href="${esc(ml)}" target="_blank" rel="noopener">Open Measurement Link</a>`:'');
+ $('pdSaved').innerHTML=(i?.pdFile?.data?`<a href="${i.pdFile.data}" download="${esc(i.pdFile.name||'pd-file')}">Open Saved File: ${esc(i.pdFile.name||'PD')}</a>`:'')+(pl?`<a href="${esc(pl)}" target="_blank" rel="noopener">Open PD Link</a>`:'')
+}
+function clearItem(){
+ currentItem='';$('itemSelect').value='';
+ ['itemName','measurement','pdPages','notes','sendMethod','measurementLink','pdLink'].forEach(x=>$(x).value='');
+ $('testCenter').value='';$('itemPicture').value='';$('measurementFile').value='';$('pdFile').value='';
+ $('preview').src='';$('preview').classList.add('hidden');showDocs(null)
+}
+$('newItem').onclick=clearItem;
+$('itemSelect').onchange=()=>{
+ let i=db.items.find(x=>x.id===$('itemSelect').value);if(!i)return clearItem();currentItem=i.id;
+ $('itemName').value=i.name||'';$('measurement').value=i.measurement||'';$('pdPages').value=i.pdPages||'';$('notes').value=i.notes||'';
+ $('testCenter').value=i.testCenter||'';$('sendMethod').value=i.sendMethod||'';$('measurementLink').value=i.measurementLink||'';$('pdLink').value=i.pdLink||'';
+ $('measurementFile').value='';$('pdFile').value='';
+ if(i.picture){$('preview').src=i.picture;$('preview').classList.remove('hidden')}else {$('preview').src='';$('preview').classList.add('hidden')}
+ showDocs(i)
+};
+$('itemPicture').onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{$('preview').src=r.result;$('preview').classList.remove('hidden')};r.readAsDataURL(f)};
+$('saveItem').onclick=async()=>{
+ let name=$('itemName').value.trim();if(!name)return alert('Enter an item name or number.');
+ let old=db.items.find(x=>x.id===currentItem);
+ let measurementFile=old?.measurementFile||null,pdFile=old?.pdFile||null;
+ try{
+   if($('measurementFile').files[0])measurementFile=await fileToData($('measurementFile').files[0]);
+   if($('pdFile').files[0])pdFile=await fileToData($('pdFile').files[0]);
+ }catch(e){return alert('One of the files could not be read.')}
+ let item={id:currentItem||crypto.randomUUID(),name,measurement:$('measurement').value,pdPages:$('pdPages').value,notes:$('notes').value,
+ testCenter:$('testCenter').value,sendMethod:$('sendMethod').value,picture:$('preview').src||'',measurementLink:$('measurementLink').value.trim(),
+ pdLink:$('pdLink').value.trim(),measurementFile,pdFile};
+ if(old)Object.assign(old,item);else db.items.push(item);currentItem=item.id;
+ try{save()}catch(e){return alert('This file is too large to save on this device. Try using a link or a smaller file.')}
+ renderItemSelect();$('itemSelect').value=item.id;showDocs(item);alert('Item saved.')
+};
+$('deleteItem').onclick=()=>{if(!currentItem)return;if(confirm('Delete this item?')){db.items=db.items.filter(x=>x.id!==currentItem);save();renderItemSelect();clearItem()}};
+$('exportBtn').onclick=()=>{let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='lottrack-backup.json';a.click();URL.revokeObjectURL(a.href)};
+renderLots();renderItemSelect();
+if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
+</script>
+
+</body></html>
